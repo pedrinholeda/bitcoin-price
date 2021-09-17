@@ -12,12 +12,37 @@ class ViewController: UIViewController {
     
     
     // MARK: Outlets
+    @IBOutlet weak var labelPrice: UILabel!
+    @IBOutlet weak var buttonUpdate: UIButton!
     
     // MARK: Initialization
     
     // MARK: Overrides
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
+        //        self.getBitcoinPrice()
+    }
+    // MARK: Actions
+    @IBAction func updatePrice(_ sender: Any) {
+        self.getBitcoinPrice()
+    }
+    
+    // MARK: Methods
+    private func priceFormatter(price: NSNumber) -> String{
+        let nf = NumberFormatter()
+        nf.numberStyle = .decimal
+        nf.locale = Locale(identifier: "pt_BR")
+        
+        if let finalPrice = nf.string(from: price) {
+            return finalPrice
+        }
+        return "0,00"
+    }
+    
+    private func getBitcoinPrice() {
+        
+        self.buttonUpdate.setTitle("Atualizando...", for: .normal)
         
         if let url = URL(string: "https://blockchain.info/ticker") {
             let task = URLSession.shared.dataTask(with: url) { dados, requisicao, erro in
@@ -28,7 +53,12 @@ class ViewController: UIViewController {
                                 as? [String: Any] {
                                 if let brl = objetoJson["BRL"]  as? [String: Any]{
                                     if let preco = brl["buy"] as? Double {
-                                        print(preco)
+                                        let formattedPrice = self.priceFormatter(price: NSNumber(value: preco))
+                                        
+                                        DispatchQueue.main.async(execute: {
+                                            self.labelPrice.text = "R$ \(formattedPrice)"
+                                            self.buttonUpdate.setTitle("Atualizar", for: .normal)
+                                        })
                                     }
                                 }
                             }
@@ -43,9 +73,14 @@ class ViewController: UIViewController {
             task.resume()
         }
     }
-    // MARK: Actions
     
-    // MARK: Methods
+    private func setupUI() {
+        setupButton()
+    }
     
+    private func setupButton() {
+        buttonUpdate.layer.cornerRadius = 15
+        buttonUpdate.clipsToBounds = true
+    }
 }
 
